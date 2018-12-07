@@ -4,6 +4,9 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 module.exports = {
     mode: 'production',
     entry: './tictactoe.js',
+    output: {
+        filename: 'plugin-tictactoe.js',
+    },
     module: {
         rules: [
             {
@@ -25,6 +28,7 @@ module.exports = {
     ],
     devtool: 'source-map',
     devServer: {
+        filename: 'plugin-tictactoe.js',
         contentBase: path.join(__dirname, "dist"),
         compress: true,
         port: 9000
