@@ -1,6 +1,6 @@
 {
     "name": "kiwiirc-plugin-tictactoe",
-    "version": "0.0.2",
+    "version": "1.0.0",
     "main": "./src/plugin.js",
     "license": "Apache-2.0",
     "private": true,
