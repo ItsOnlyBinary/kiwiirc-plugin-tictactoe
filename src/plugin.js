@@ -12,6 +12,7 @@ kiwi.plugin('tictactoe', (kiwi) => {
     kiwi.on('irc.raw.TAGMSG', (command, event, network) => {
         if (event.params[0] !== network.nick ||
             event.nick === network.nick ||
+            !event.tags['+kiwiirc.com/ttt'] ||
             event.tags['+kiwiirc.com/ttt'].charAt(0) !== '{'
         ) {
             return;
