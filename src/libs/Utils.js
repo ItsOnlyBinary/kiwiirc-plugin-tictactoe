@@ -19,10 +19,9 @@ export function getGames() {
 }
 
 export function sendData(network, target, data) {
-    data.plugin = 'tictactoe';
     let msg = new network.ircClient.Message('TAGMSG', target);
     msg.prefix = network.nick;
-    msg.tags['+data'] = JSON.stringify(data);
+    msg.tags['+kiwiirc.com/ttt'] = JSON.stringify(data);
     network.ircClient.raw(msg);
 }
 

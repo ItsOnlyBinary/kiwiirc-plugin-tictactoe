@@ -15,7 +15,7 @@ export default {
     computed: {
         showButton() {
             // the count = count is to force the button to update when first game is created
-            // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+            // eslint-disable-next-line vue/no-side-effects-in-computed-properties, no-self-assign
             this.count = this.count;
 
             /* eslint-disable no-undef */
@@ -42,10 +42,10 @@ export default {
         },
     },
     methods: {
-        forceUpdateUI: function forceUpdateUI() {
+        forceUpdateUI() {
             this.count++;
         },
-        buttonClicked: function buttonClicked() {
+        buttonClicked() {
             // eslint-disable-next-line no-undef
             let buffer = kiwi.state.getActiveBuffer();
             let network = buffer.getNetwork();

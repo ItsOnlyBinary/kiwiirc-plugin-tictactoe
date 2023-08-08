@@ -68,17 +68,17 @@ export default class TicTacToe {
 
     checkGame() {
         const winboardValues = this.getWinboardValues();
-        const isDraw = this.getBoardValues().every(x => x.every(y => y !== ''));
+        const isDraw = this.getBoardValues().every((x) => x.every((y) => y !== ''));
         let vector;
 
         winboardValues.forEach((x, ind) => {
-            if (x.every(y => y === 'X')) {
+            if (x.every((y) => y === 'X')) {
                 this.data.gameMessage = 'Winner: X';
                 vector = winBoard[ind];
                 this.data.gameOver = true;
             }
 
-            if (x.every(y => y === 'O')) {
+            if (x.every((y) => y === 'O')) {
                 this.data.gameMessage = 'Winner: O';
                 vector = winBoard[ind];
                 this.data.gameOver = true;
@@ -202,10 +202,10 @@ export default class TicTacToe {
     }
 
     getBoardValues() {
-        return this.data.gameBoard.map(x => x.map(y => y.val));
+        return this.data.gameBoard.map((x) => x.map((y) => y.val));
     }
 
     getWinboardValues() {
-        return winBoard.map(x => x.map(y => this.data.gameBoard[y[0]][y[1]].val));
+        return winBoard.map((x) => x.map((y) => this.data.gameBoard[y[0]][y[1]].val));
     }
 }

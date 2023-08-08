@@ -11,14 +11,11 @@ kiwi.plugin('tictactoe', (kiwi) => {
     kiwi.on('irc.raw.TAGMSG', (command, event, network) => {
         if (event.params[0] !== network.nick ||
             event.nick === network.nick ||
-            event.tags['+data'].charAt(0) !== '{'
+            event.tags['+kiwiirc.com/ttt'].charAt(0) !== '{'
         ) {
             return;
         }
-        let data = JSON.parse(event.tags['+data']);
-        if (data.plugin !== 'tictactoe') {
-            return;
-        }
+        let data = JSON.parse(event.tags['+kiwiirc.com/ttt']);
 
         let buffer = kiwi.state.getOrAddBufferByName(network.id, event.nick);
         let game = Utils.getGame(event.nick);
