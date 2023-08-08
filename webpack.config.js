@@ -1,9 +1,11 @@
 const path = require('path');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const makeSourceMap = process.argv.indexOf('--srcmap') > -1;
 
 module.exports = {
     mode: 'production',
-    entry: './tictactoe.js',
+    entry: './src/plugin.js',
     output: {
         filename: 'plugin-tictactoe.js',
     },
@@ -15,22 +17,37 @@ module.exports = {
             },
             {
                 test: /\.js$/,
-                loader: 'babel-loader',
+                use: [{loader: 'babel-loader'}],
+                include: [
+                    path.join(__dirname, 'src'),
+                ]
             },
             {
                 test: /\.css$/,
                 use: [ 'style-loader', 'css-loader' ]
-            }
+            },
         ]
     },
     plugins: [
-        new VueLoaderPlugin()
+        new VueLoaderPlugin(),
     ],
-    devtool: 'source-map',
+    performance: {
+        hints: false,
+        maxEntrypointSize: 512000,
+        maxAssetSize: 512000
+    },
+    optimization: {
+        minimizer: [new TerserPlugin({
+            extractComments: false,
+        })],
+    },
+    devtool: makeSourceMap ? 'source-map' : undefined,
     devServer: {
-        filename: 'plugin-tictactoe.js',
-        contentBase: path.join(__dirname, "dist"),
+        static: path.join(__dirname, "dist"),
         compress: true,
-        port: 9000
+        port: 9000,
+        headers: {
+            "Access-Control-Allow-Origin": "*"
+        }
     }
 };
