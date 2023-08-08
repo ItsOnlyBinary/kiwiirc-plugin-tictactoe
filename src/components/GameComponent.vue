@@ -119,16 +119,17 @@ export default {
     cursor: pointer;
     margin: 0 5px;
     padding: 1px 5px;
-    border: 1px solid black;
-    border-radius: 20px;
+    color: var(--brand-default-bg);
+    border: 1px solid var(--brand-default-fg);
+    border-radius: 4px;
 }
 
 #tictactoe .invite_button_accept {
-    background-color: #6bff5e;
+    background-color: var(--brand-primary);
 }
 
 #tictactoe .invite_button_decline {
-    background-color: #ff3030;
+    background-color: var(--brand-error);
 }
 
 #tictactoe table {

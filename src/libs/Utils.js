@@ -14,6 +14,10 @@ export function setGame(key, game) {
     games[key] = game;
 }
 
+export function removeGame(key) {
+    delete games[key];
+}
+
 export function getGames() {
     return games;
 }
@@ -49,7 +53,7 @@ export function terminateGame(game) {
             });
         }
     }
-    games[game.getRemotePlayer()] = null;
+    removeGame(game.getRemotePlayer());
 }
 
 export function incrementUnread(buffer) {

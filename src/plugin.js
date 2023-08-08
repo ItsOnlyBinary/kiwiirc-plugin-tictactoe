@@ -4,8 +4,9 @@ import GameComponent from './components/GameComponent.vue';
 
 // eslint-disable-next-line no-undef
 kiwi.plugin('tictactoe', (kiwi) => {
-    let buttonComponent = null;
     let mediaViewerOpen = false;
+
+    kiwi.addUi('header_query', GameButton);
 
     // Listen to incoming messages
     kiwi.on('irc.raw.TAGMSG', (command, event, network) => {
@@ -27,7 +28,7 @@ kiwi.plugin('tictactoe', (kiwi) => {
             }
             game = Utils.getGame(event.nick);
             game.setShowInvite(true);
-            buttonComponent.forceUpdateUI();
+            kiwi.emit('plugin-tictactoe.update-button');
             kiwi.state.addMessage(buffer, {
                 nick: '*',
                 message: 'You have been invited to play Tic-Tac-Toe!',
@@ -108,7 +109,7 @@ kiwi.plugin('tictactoe', (kiwi) => {
         }
         default: {
             // eslint-disable-next-line no-console
-            console.log('Something bad happened', event);
+            console.error('TicTacToe: Something bad happened', event);
             break;
         }
         }
@@ -143,26 +144,41 @@ kiwi.plugin('tictactoe', (kiwi) => {
                     game.setLocalPlayer(event.new_nick);
                 }
             });
-        } else {
-            let game = Utils.getGame(event.nick);
-            if (game) {
-                if (game.getStartPlayer() === event.nick) {
-                    game.setStartPlayer(event.new_nick);
-                }
-                game.setRemotePlayer(event.new_nick);
-                Utils.setGame(event.new_nick, game);
-                Utils.setGame(event.nick, null);
+            return;
+        }
+
+        let game = Utils.getGame(event.nick);
+        if (game) {
+            if (game.getStartPlayer() === event.nick) {
+                game.setStartPlayer(event.new_nick);
             }
+            game.setRemotePlayer(event.new_nick);
+            Utils.setGame(event.new_nick, game);
+            Utils.setGame(event.nick, null);
+        }
+    });
+
+    kiwi.on('irc.quit', (event, network, ircEventObj) => {
+        if (event.nick === network.nick) {
+            Object.keys(Utils.getGames()).forEach((key) => {
+                let game = Utils.getGame(key);
+                if (game && game.getInviteSent()) {
+                    Utils.setGame(game.getRemotePlayer(), null);
+                }
+            });
+            kiwi.emit('plugin-tictactoe.update-button');
+            return;
+        }
+
+        let game = Utils.getGame(event.nick);
+        if (game && game.getInviteSent()) {
+            Utils.setGame(game.getRemotePlayer(), null);
+            kiwi.emit('plugin-tictactoe.update-button');
         }
     });
 
     kiwi.state.$watch('ui.active_buffer', () => {
         let buffer = kiwi.state.getActiveBuffer();
-        if (!buttonComponent) {
-            buttonComponent = new kiwi.Vue(GameButton);
-            buttonComponent.$mount();
-            kiwi.addUi('header_query', buttonComponent.$el);
-        }
         let game = Utils.getGame(buffer.name);
         if (game && (game.getShowGame() || game.getShowInvite()) && !mediaViewerOpen) {
             kiwi.emit('mediaviewer.show', { component: GameComponent });
