@@ -5,6 +5,7 @@
 </template>
 
 <script>
+/* global kiwi:true */
 
 import * as Utils from '../libs/Utils.js';
 
@@ -13,15 +14,14 @@ export default {
         return { count: 0 };
     },
     computed: {
+        gameStore() {
+            return Utils.getGameStore();
+        },
         showButton() {
-            // the count = count is to force the button to update when first game is created
-            // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-            this.count = this.count;
-
-            /* eslint-disable no-undef */
+            // eslint-disable-next-line no-console
+            console.log('showButton', this.gameStore);
             let buffer = kiwi.state.getActiveBuffer();
             let network = kiwi.state.getActiveNetwork();
-            /* eslint-enable no-undef */
 
             // Don't show the button if they have a chat to them self
             if (network.nick === buffer.name) {
@@ -29,7 +29,8 @@ export default {
             }
 
             // If there is no game show the button
-            let game = Utils.getGame(buffer.name);
+            // let gameStore = Utils.getGameStore();
+            let game = this.gameStore[buffer.name];
             if (!game) {
                 return true;
             }
@@ -42,11 +43,7 @@ export default {
         },
     },
     methods: {
-        forceUpdateUI: function forceUpdateUI() {
-            this.count++;
-        },
-        buttonClicked: function buttonClicked() {
-            // eslint-disable-next-line no-undef
+        buttonClicked() {
             let buffer = kiwi.state.getActiveBuffer();
             let network = buffer.getNetwork();
 
@@ -71,7 +68,6 @@ export default {
                     game.setInviteTimeout(null);
                     game.setInviteSent(false);
 
-                    // eslint-disable-next-line no-undef
                     kiwi.state.addMessage(buffer, {
                         nick: '*',
                         message: 'The invite to ' + buffer.name +
@@ -80,9 +76,7 @@ export default {
                     });
                 }, 4000));
             }
-            this.forceUpdateUI();
             Utils.sendData(network, buffer.name, { cmd: 'invite' });
-            // eslint-disable-next-line no-undef
             kiwi.state.addMessage(buffer, {
                 nick: '*',
                 message: buffer.name + ' has been invited to play Tic-Tac-Toe!',

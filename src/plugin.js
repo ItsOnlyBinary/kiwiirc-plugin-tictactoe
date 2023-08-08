@@ -1,24 +1,21 @@
+/* global kiwi:true */
+
 import * as Utils from './libs/Utils.js';
 import GameButton from './components/GameButton.vue';
 import GameComponent from './components/GameComponent.vue';
 
-// eslint-disable-next-line no-undef
 kiwi.plugin('tictactoe', (kiwi) => {
-    let buttonComponent = null;
     let mediaViewerOpen = false;
 
     // Listen to incoming messages
     kiwi.on('irc.raw.TAGMSG', (command, event, network) => {
         if (event.params[0] !== network.nick ||
             event.nick === network.nick ||
-            event.tags['+data'].charAt(0) !== '{'
+            event.tags['+kiwiirc.com/ttt'].charAt(0) !== '{'
         ) {
             return;
         }
-        let data = JSON.parse(event.tags['+data']);
-        if (data.plugin !== 'tictactoe') {
-            return;
-        }
+        let data = kiwi.JSON5.parse(event.tags['+kiwiirc.com/ttt']);
 
         let buffer = kiwi.state.getOrAddBufferByName(network.id, event.nick);
         let game = Utils.getGame(event.nick);
@@ -30,7 +27,6 @@ kiwi.plugin('tictactoe', (kiwi) => {
             }
             game = Utils.getGame(event.nick);
             game.setShowInvite(true);
-            buttonComponent.forceUpdateUI();
             kiwi.state.addMessage(buffer, {
                 nick: '*',
                 message: 'You have been invited to play Tic-Tac-Toe!',
@@ -159,13 +155,10 @@ kiwi.plugin('tictactoe', (kiwi) => {
         }
     });
 
+    kiwi.addUi('header_query', GameButton);
+
     kiwi.state.$watch('ui.active_buffer', () => {
         let buffer = kiwi.state.getActiveBuffer();
-        if (!buttonComponent) {
-            buttonComponent = new kiwi.Vue(GameButton);
-            buttonComponent.$mount();
-            kiwi.addUi('header_query', buttonComponent.$el);
-        }
         let game = Utils.getGame(buffer.name);
         if (game && (game.getShowGame() || game.getShowInvite()) && !mediaViewerOpen) {
             kiwi.emit('mediaviewer.show', { component: GameComponent });

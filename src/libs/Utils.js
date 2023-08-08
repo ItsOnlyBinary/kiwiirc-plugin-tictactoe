@@ -1,28 +1,39 @@
+/* global kiwi:true */
+
 import TicTacToe from './TicTacToe.js';
 
-const games = {};
+const gameStore = kiwi.Vue.extend({
+    data() {
+        return {
+            games: {},
+        };
+    },
+});
 
 export function newGame(network, localPlayer, remotePlayer) {
-    games[remotePlayer] = new TicTacToe(network, localPlayer, remotePlayer);
+    gameStore.games[remotePlayer] = new TicTacToe(network, localPlayer, remotePlayer);
 }
 
 export function getGame(key) {
-    return games[key];
+    return gameStore.games[key];
 }
 
 export function setGame(key, game) {
-    games[key] = game;
+    gameStore.games[key] = game;
 }
 
 export function getGames() {
-    return games;
+    return gameStore.games;
+}
+
+export function getGameStore() {
+    return gameStore;
 }
 
 export function sendData(network, target, data) {
-    data.plugin = 'tictactoe';
     let msg = new network.ircClient.Message('TAGMSG', target);
     msg.prefix = network.nick;
-    msg.tags['+data'] = JSON.stringify(data);
+    msg.tags['+kiwiirc.com/ttt'] = kiwi.JSON5.stringify(data);
     network.ircClient.raw(msg);
 }
 
@@ -31,7 +42,6 @@ export function terminateGame(game) {
         return;
     }
     let network = game.getNetwork();
-    // eslint-disable-next-line no-undef
     let buffer = kiwi.state.getBufferByName(network.id, game.getRemotePlayer());
 
     if (network && game.getShowInvite()) {
@@ -42,7 +52,6 @@ export function terminateGame(game) {
             sendData(network, game.getRemotePlayer(), { cmd: 'terminate' });
         }
         if (buffer) {
-            // eslint-disable-next-line no-undef
             kiwi.state.addMessage(buffer, {
                 nick: '*',
                 message: 'You ended the game of Tic-Tac-Toe!',
@@ -50,11 +59,10 @@ export function terminateGame(game) {
             });
         }
     }
-    games[game.getRemotePlayer()] = null;
+    gameStore.games[game.getRemotePlayer()] = null;
 }
 
 export function incrementUnread(buffer) {
-    // eslint-disable-next-line no-undef
     let activeBuffer = kiwi.state.getActiveBuffer();
     if (activeBuffer && activeBuffer !== buffer) {
         buffer.incrementFlag('unread');
