@@ -1,7 +1,9 @@
 <template>
     <div id="tictactoe">
-        <div v-if="game.getShowInvite()"
-             :style="{'margin-bottom': (game.getShowGame()? '6px' : '0')}" class="invite"
+        <div
+            v-if="game.getShowInvite()"
+            :style="{'margin-bottom': (game.getShowGame()? '6px' : '0')}"
+            class="invite"
         >
             <span class="invite_text">You have been invited to play Tic-Tac-Toe</span>
             <div class="invite_button invite_button_accept" @click="inviteClicked(true)">
@@ -14,15 +16,17 @@
         <div v-if="game.getShowGame()">
             <table id="board">
                 <tr v-for="(row, index) in game.getGameBoard()" :key="index">
-                    <td v-for="(box, key) in row" :key="key"
+                    <td
+                        v-for="(box, key) in row"
+                        :key="key"
                         :class="[ isViable(box) ? 'selectable' : '', box.win ? 'winner' : '' ]"
                         @click="boxClicked(box)"
                     >
-                        {{box.val}}
+                        {{ box.val }}
                     </td>
                 </tr>
             </table>
-            <div class="message">{{game.getGameMessage()}}</div>
+            <div class="message">{{ game.getGameMessage() }}</div>
         </div>
     </div>
 </template>
@@ -33,20 +37,20 @@ import * as Utils from '../libs/Utils.js';
 
 export default {
     computed: {
-        game: function game() {
+        game() {
             // eslint-disable-next-line no-undef
             let buffer = kiwi.state.getActiveBuffer();
             return Utils.getGame(buffer.name);
         },
     },
     methods: {
-        isViable: function isViable(box) {
+        isViable(box) {
             // eslint-disable-next-line no-undef
             let buffer = kiwi.state.getActiveBuffer();
             let game = Utils.getGame(buffer.name);
             return (!game.getGameOver() && game.isMyTurn() && box.val === '');
         },
-        boxClicked: function boxClicked(box) {
+        boxClicked(box) {
             if (this.isViable(box)) {
                 // eslint-disable-next-line no-undef
                 let buffer = kiwi.state.getActiveBuffer();
@@ -62,7 +66,7 @@ export default {
                 }
             }
         },
-        inviteClicked: function buttonClicked(accepted) {
+        inviteClicked(accepted) {
             /* eslint-disable no-undef */
             let network = kiwi.state.getActiveNetwork();
             let remotePlayer = kiwi.state.getActiveBuffer().name;
@@ -115,16 +119,17 @@ export default {
     cursor: pointer;
     margin: 0 5px;
     padding: 1px 5px;
-    border: 1px solid black;
-    border-radius: 20px;
+    color: var(--brand-default-bg);
+    border: 1px solid var(--brand-default-fg);
+    border-radius: 4px;
 }
 
 #tictactoe .invite_button_accept {
-    background-color: #6bff5e;
+    background-color: var(--brand-primary);
 }
 
 #tictactoe .invite_button_decline {
-    background-color: #ff3030;
+    background-color: var(--brand-error);
 }
 
 #tictactoe table {

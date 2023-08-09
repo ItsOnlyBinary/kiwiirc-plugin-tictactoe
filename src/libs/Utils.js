@@ -14,15 +14,18 @@ export function setGame(key, game) {
     games[key] = game;
 }
 
+export function removeGame(key) {
+    delete games[key];
+}
+
 export function getGames() {
     return games;
 }
 
 export function sendData(network, target, data) {
-    data.plugin = 'tictactoe';
     let msg = new network.ircClient.Message('TAGMSG', target);
     msg.prefix = network.nick;
-    msg.tags['+data'] = JSON.stringify(data);
+    msg.tags['+kiwiirc.com/ttt'] = JSON.stringify(data);
     network.ircClient.raw(msg);
 }
 
@@ -50,7 +53,7 @@ export function terminateGame(game) {
             });
         }
     }
-    games[game.getRemotePlayer()] = null;
+    removeGame(game.getRemotePlayer());
 }
 
 export function incrementUnread(buffer) {

@@ -5,6 +5,7 @@
 </template>
 
 <script>
+/* global kiwi:true */
 
 import * as Utils from '../libs/Utils.js';
 
@@ -15,8 +16,8 @@ export default {
     computed: {
         showButton() {
             // the count = count is to force the button to update when first game is created
-            // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-            this.count = this.count;
+            // eslint-disable-next-line no-unused-expressions
+            this.count;
 
             /* eslint-disable no-undef */
             let buffer = kiwi.state.getActiveBuffer();
@@ -41,11 +42,16 @@ export default {
             return ret;
         },
     },
+    mounted() {
+        this.listen(kiwi, 'plugin-tictactoe.update-button', () => {
+            this.forceUpdateUI();
+        });
+    },
     methods: {
-        forceUpdateUI: function forceUpdateUI() {
+        forceUpdateUI() {
             this.count++;
         },
-        buttonClicked: function buttonClicked() {
+        buttonClicked() {
             // eslint-disable-next-line no-undef
             let buffer = kiwi.state.getActiveBuffer();
             let network = buffer.getNetwork();
