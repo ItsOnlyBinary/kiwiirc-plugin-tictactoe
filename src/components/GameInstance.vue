@@ -44,6 +44,7 @@ export default kiwi.Vue.extend({
     },
     methods: {
         start(startPlayer) {
+            this.gameManager.makeActive(this.remotePlayer);
             this.startPlayer = startPlayer;
             this.started = true;
             this.setTurnMessage();
@@ -117,7 +118,7 @@ export default kiwi.Vue.extend({
             if (!accepted) {
                 this.inviteDeclined = true;
                 this.sendData({ cmd: 'invite_declined' });
-                this.gameManager.remove(this.remotePlayer);
+                this.gameManager.remove(this);
                 return;
             }
 

@@ -17,9 +17,13 @@ kiwi.plugin('tictactoe', (kiwi) => {
 
     kiwi.addUi('header_query', GameButton, { props: { gameManager } });
 
+    kiwi.on('irc.nick', gameManager.handleIrcNick);
+    kiwi.on('irc.quit', gameManager.handleIrcQuit);
+
     // Listen to incoming messages
     kiwi.on('irc.raw.TAGMSG', (command, event, network) => {
-        if (event.params[0] !== network.nick ||
+        if (
+            event.params[0] !== network.nick ||
             event.nick === network.nick ||
             !event.tags['+kiwiirc.com/tictactoe'] ||
             event.tags['+kiwiirc.com/tictactoe'].charAt(0) !== '{'
@@ -28,7 +32,7 @@ kiwi.plugin('tictactoe', (kiwi) => {
         }
         const data = JSON.parse(event.tags['+kiwiirc.com/tictactoe']);
 
-        let game = gameManager.get(event.nick);
+        let game = gameManager.getWaitingOrActive(event.nick);
         let buffer = kiwi.state.getBufferByName(network.id, event.nick);
 
         switch (data.cmd) {
@@ -77,7 +81,7 @@ kiwi.plugin('tictactoe', (kiwi) => {
             game.inviteTimeout = null;
 
             if (!mediaViewerOpen || kiwi.state.getActiveBuffer() !== game.buffer) {
-                gameManager.remove(game.remotePlayer);
+                gameManager.remove(game);
             }
             break;
         }
@@ -101,7 +105,9 @@ kiwi.plugin('tictactoe', (kiwi) => {
         }
         case 'terminate': {
             game.over = true;
-            game.message = TextFormatting.t('plugin-tictactoe:terminated', { nick: game.remotePlayer });
+            game.message = TextFormatting.t('plugin-tictactoe:terminated', {
+                nick: game.remotePlayer,
+            });
             break;
         }
         case 'error': {
@@ -150,50 +156,23 @@ kiwi.plugin('tictactoe', (kiwi) => {
     });
 
     kiwi.on('buffer.close', (event) => {
-        const game = gameManager.get(event.buffer.name);
+        const game = gameManager.getWaitingOrActive(event.buffer.name);
         if (!game) {
             return;
         }
         gameManager.terminate(game);
     });
 
-    kiwi.on('irc.nick', (event, network, ircEventObj) => {
-        if (event.nick === network.nick) {
-            Object.values(gameManager.games).forEach((game) => {
-                if (game.startPlayer === event.nick) {
-                    game.startPlayer = event.new_nick;
-                }
-                game.localPlayer = event.new_nick;
-            });
-            return;
+    kiwi.state.$watch(
+        () => kiwi.state.ui.active_network + kiwi.state.ui.active_buffer,
+        () => {
+            const buffer = kiwi.state.getActiveBuffer();
+            const game = gameManager.get(buffer.name);
+            if (game && game.started && !mediaViewerOpen) {
+                gameManager.show();
+            } else if (!game && mediaViewerOpen) {
+                kiwi.emit('mediaviewer.hide');
+            }
         }
-
-        gameManager.rename(event.nick, event.new_nick);
-    });
-
-    kiwi.on('irc.quit', (event, network, ircEventObj) => {
-        if (event.nick === network.nick) {
-            Object.values(gameManager.games).forEach((game) => {
-                game.over = true;
-                game.message = this.$t('plugin-tictactoe:terminated_you');
-            });
-            return;
-        }
-
-        const game = gameManager.get(event.nick);
-        if (game) {
-            game.over = true;
-            game.message = this.$t('plugin-tictactoe:terminated', { nick: game.remotePlayer });
-        }
-    });
-
-    kiwi.state.$watch('ui.active_buffer', () => {
-        const buffer = kiwi.state.getActiveBuffer();
-        const game = gameManager.get(buffer.name);
-        if (game && game.started && !mediaViewerOpen) {
-            gameManager.show();
-        } else if (!game && mediaViewerOpen) {
-            kiwi.emit('mediaviewer.hide');
-        }
-    });
+    );
 });

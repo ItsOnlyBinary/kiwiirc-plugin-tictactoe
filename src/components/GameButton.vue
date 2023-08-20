@@ -19,12 +19,12 @@ export default {
             }
 
             // If there is no game show the button
-            let game = this.gameManager.get(this.buffer.name);
+            let game = this.gameManager.getWaitingOrActive(this.buffer.name);
             if (!game) {
                 return true;
             }
 
-            return game.started && game.over;
+            return game.inviteDeclined || game.over;
         },
     },
     methods: {
