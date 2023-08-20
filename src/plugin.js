@@ -4,12 +4,16 @@ import GameComponent from '@/components/GameComponent.vue';
 import MessageTemplate from '@/components/MessageTemplate.vue';
 import translations from '@/translations';
 
+import * as config from '@/config.js';
+
 /* global kiwi:true */
 
 const TextFormatting = kiwi.require('helpers/TextFormatting');
 
 // eslint-disable-next-line no-undef
 kiwi.plugin('tictactoe', (kiwi) => {
+    config.setDefaults();
+
     let mediaViewerOpen = false;
     let gameManager = new GameManager();
 
