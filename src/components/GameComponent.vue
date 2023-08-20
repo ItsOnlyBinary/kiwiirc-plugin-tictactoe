@@ -1,185 +1,129 @@
 <template>
-    <div id="tictactoe">
-        <div
-            v-if="game.getShowInvite()"
-            :style="{'margin-bottom': (game.getShowGame()? '6px' : '0')}"
-            class="invite"
-        >
-            <span class="invite_text">You have been invited to play Tic-Tac-Toe</span>
-            <div class="invite_button invite_button_accept" @click="inviteClicked(true)">
-                Accept
-            </div>
-            <div class="invite_button invite_button_decline" @click="inviteClicked(false)">
-                Decline
+    <div class="tictactoe">
+        <div class="tictactoe-board">
+            <div
+                v-for="box in game.board"
+                :key="box.id"
+                :class="{
+                    'tictactoe-selectable': isViable(box),
+                    'tictactoe-winner': box.win,
+                }"
+                @click="boxClicked(box)"
+            >
+                <svg v-if="box.val == 'O'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                    <!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                    <path
+                        d="M224 96a160 160 0 1 0 0 320 160 160 0 1 0 0-320zM448 256A224
+                        224 0 1 1 0 256a224 224 0 1 1 448 0z"
+                    />
+                </svg>
+                <svg v-else-if="box.val == 'X'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                    <!--! Font Awesome Pro 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                    <path
+                        d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206
+                        56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256
+                        7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306
+                        327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256
+                        376.6 84.5z"
+                    />
+                </svg>
             </div>
         </div>
-        <div v-if="game.getShowGame()">
-            <table id="board">
-                <tr v-for="(row, index) in game.getGameBoard()" :key="index">
-                    <td
-                        v-for="(box, key) in row"
-                        :key="key"
-                        :class="[ isViable(box) ? 'selectable' : '', box.win ? 'winner' : '' ]"
-                        @click="boxClicked(box)"
-                    >
-                        {{ box.val }}
-                    </td>
-                </tr>
-            </table>
-            <div class="message">{{ game.getGameMessage() }}</div>
-        </div>
+        <div class="tictactoe-message">{{ game.message }}</div>
     </div>
 </template>
 
 <script>
-
-import * as Utils from '../libs/Utils.js';
+/* global kiwi:true */
 
 export default {
+    props: ['gameManager'],
     computed: {
         game() {
-            // eslint-disable-next-line no-undef
-            let buffer = kiwi.state.getActiveBuffer();
-            return Utils.getGame(buffer.name);
+            const buffer = kiwi.state.getActiveBuffer();
+            return this.gameManager.get(buffer.name);
         },
     },
     methods: {
         isViable(box) {
-            // eslint-disable-next-line no-undef
-            let buffer = kiwi.state.getActiveBuffer();
-            let game = Utils.getGame(buffer.name);
-            return (!game.getGameOver() && game.isMyTurn() && box.val === '');
+            return (!this.game.over && this.game.isLocalTurn && box.val === '');
         },
         boxClicked(box) {
-            if (this.isViable(box)) {
-                // eslint-disable-next-line no-undef
-                let buffer = kiwi.state.getActiveBuffer();
-                let game = Utils.getGame(buffer.name);
-                box.val = game.getMarker();
-                Utils.sendData(buffer.getNetwork(), game.getRemotePlayer(), {
-                    cmd: 'action', clicked: box.id, turn: game.getGameTurn(),
-                });
-                game.incrementGameTurn();
-                game.checkGame();
-                if (!game.getGameOver() && !game.isMyTurn()) {
-                    game.setTurnMessage();
-                }
+            if (!this.isViable(box)) {
+                return;
             }
-        },
-        inviteClicked(accepted) {
-            /* eslint-disable no-undef */
-            let network = kiwi.state.getActiveNetwork();
-            let remotePlayer = kiwi.state.getActiveBuffer().name;
-            /* eslint-enable no-undef */
 
-            let game = Utils.getGame(remotePlayer);
-            game.setShowInvite(false);
-            game.setInviteSent(false);
-            if (accepted) {
-                let startPlayer = Math.floor(Math.random() * 2) === 0 ? network.nick : remotePlayer;
-                game.startGame(startPlayer);
-                game.setTurnMessage();
-                Utils.sendData(network, remotePlayer, {
-                    cmd: 'invite_accepted', startPlayer: startPlayer,
-                });
-            } else {
-                Utils.sendData(network, remotePlayer, { cmd: 'invite_declined' });
-                // eslint-disable-next-line no-undef
-                kiwi.emit('mediaviewer.hide');
+            box.val = this.game.getMarker();
+            this.game.sendData({
+                cmd: 'action',
+                clicked: box.id,
+                turn: this.game.turn,
+            });
+            this.game.incrementTurn();
+            this.game.checkGame();
+            if (!this.game.over && !this.game.isLocalTurn) {
+                this.game.setTurnMessage();
             }
         },
     },
 };
 </script>
 
-<style>
-#tictactoe {
+<style lang="scss">
+.tictactoe {
     position: relative;
     display: block;
     width: 100%;
     padding: 6px 0;
-    text-align: center;
-}
+    user-select: none;
 
-#tictactoe .invite {
-    display: inline-flex;
-    margin: 0 auto;
-    font-size: 1.1em;
-    font-weight: bold;
-    align-items: center;
-}
+    .tictactoe-board {
+        display: grid;
+        margin: 0 auto;
+        width: 286px;
+        height: 286px;
+        grid-template-rows: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
 
-#tictactoe .invite_text {
-    float: left;
-    margin-right: 5px;
-}
+        > div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 8px solid var(--brand-default-fg);
+            border-bottom: 8px solid var(--brand-default-fg);
 
-#tictactoe .invite_button {
-    float: left;
-    cursor: pointer;
-    margin: 0 5px;
-    padding: 1px 5px;
-    color: var(--brand-default-bg);
-    border: 1px solid var(--brand-default-fg);
-    border-radius: 4px;
-}
+            svg {
+                width: 74px;
+                height: 74px;
 
-#tictactoe .invite_button_accept {
-    background-color: var(--brand-primary);
-}
+                > path {
+                    fill: var(--brand-default-fg);
+                }
+            }
+        }
 
-#tictactoe .invite_button_decline {
-    background-color: var(--brand-error);
-}
+        & :nth-child(3n+3) {
+            border-right: initial;
+        }
 
-#tictactoe table {
-    margin: 0 auto;
-    font-size: 5em;
-    text-align: center;
-    font-weight: bold;
-    border-collapse: collapse;
-}
+        & :nth-last-child(-n+3) {
+            border-bottom: initial;
+        }
+    }
 
-#tictactoe .selectable {
-    cursor: pointer;
-}
+    .tictactoe-selectable {
+        cursor: pointer;
+    }
 
-#tictactoe .winner {
-    background-color: #6bff5e;
-}
+    .tictactoe-winner {
+        background-color: #00ff0080;
+    }
 
-#tictactoe .message {
-    text-align: center;
-    font-size: 1.4em;
-    font-weight: bold;
-    margin-top: 6px;
-}
-
-#tictactoe table td {
-    border: 6px solid black;
-    width: 90px;
-    height: 90px;
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
-}
-
-#tictactoe table tr:first-child td {
-    border-top: 0;
-}
-
-#tictactoe table tr:last-child td {
-    border-bottom: 0;
-}
-
-#tictactoe table tr td:first-child,
-table tr th:first-child {
-    border-left: 0;
-}
-
-#tictactoe table tr td:last-child,
-table tr th:last-child {
-    border-right: 0;
+    .tictactoe-message {
+        text-align: center;
+        font-size: 1.4em;
+        font-weight: 700;
+        margin-top: 6px;
+    }
 }
 </style>

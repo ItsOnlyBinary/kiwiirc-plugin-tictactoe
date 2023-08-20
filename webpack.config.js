@@ -1,6 +1,7 @@
 const path = require('path');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const autoprefixer = require('autoprefixer');
 const makeSourceMap = process.argv.indexOf('--srcmap') > -1;
 
 module.exports = {
@@ -9,11 +10,26 @@ module.exports = {
     output: {
         filename: 'plugin-tictactoe.js',
     },
+    resolve: {
+        alias: {
+            '@': path.resolve('src'),
+        },
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.vue', '.json'],
+    },
     module: {
         rules: [
             {
                 test: /\.vue$/,
-                loader: 'vue-loader',
+                use: [
+                    {
+                        loader: 'vue-loader',
+                        options: {
+                            transformAssetUrls: {
+                                object: ['data'],
+                            },
+                        },
+                    },
+                ],
             },
             {
                 test: /\.js$/,
@@ -24,7 +40,39 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: [ 'style-loader', 'css-loader' ]
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                                plugins: [autoprefixer],
+                            },
+                        },
+                    }
+                ]
+            },
+            {
+                test: /\.s[ca]ss$/,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                                plugins: [autoprefixer],
+                            },
+                        },
+                    },
+                    'sass-loader'
+                ]
+            },
+            {
+                test: /\.(svg)(\?.*)?$/,
+                type: 'asset/resource',
+                generator: { filename: 'static/img/[contenthash:8][ext][query]' },
             },
         ]
     },
